@@ -177,3 +177,15 @@ cloudflared --version
 ```
 cloudflared tunnel --url http://localhost:3000
 ```
+
+
+Gen terminate error solution
+
+```deactivate 
+rm -rf .venv```
+
+
+```python3 -m venv .venv
+source .venv/bin/activate```
+
+```./run_rl_swarm.sh```
