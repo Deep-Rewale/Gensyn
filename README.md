@@ -179,13 +179,21 @@ cloudflared tunnel --url http://localhost:3000
 ```
 
 
-Gen terminate error solution
+## 6️⃣ **Resolve Terminated Error**
 
-```deactivate 
-rm -rf .venv```
+* Follow these command one by one: (You should be in Rl-swarm directory) ❗
 
 
-```python3 -m venv .venv
-source .venv/bin/activate```
+```
+deactivate 
+rm -rf .venv
+```
 
-```./run_rl_swarm.sh```
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+```
+./run_rl_swarm.sh
+```
