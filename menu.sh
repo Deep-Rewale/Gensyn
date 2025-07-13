@@ -63,9 +63,9 @@ show_header() {
     echo "                                                                                            "
     
     echo -e "${YELLOW}           🚀 Gensyn RL-Swarm Launcher Made By Deep 🚀${NC}"
-    echo -e "${YELLOW}              GitHub: https://github.com/Deep-Rewale${NC}"
-    echo -e "${YELLOW}              Telegram: https://t.me/Deeprewale${NC}"
-     echo -e "${YELLOW}             X ACCOUNT: https://x.com/deep_rewale28${NC}"
+    echo -e "${YELLOW}            💻 GitHub: https://github.com/Deep-Rewale${NC}"
+    echo -e "${YELLOW}            💬Telegram: https://t.me/Deeprewale${NC}"
+     echo -e "${YELLOW}           💡 X ACCOUNT: https://x.com/deep_rewale28${NC}"
     echo -e "${GREEN}===============================================================================${NC}"
 }
 
