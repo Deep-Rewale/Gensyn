@@ -117,7 +117,7 @@ disable_swap() {
 # Fixall Script
 run_fixall() {
     echo -e "${CYAN}🔧 Applying comprehensive fixes...${NC}"
-    if curl -fsSL https://raw.githubusercontent.com/deep2882004/Gensyn/main/fix.sh | bash >/dev/null 2>&1; then
+    if curl -fsSL https://raw.githubusercontent.com/Deep-Rewale/Gensyn/main/fix.sh | bash >/dev/null 2>&1; then
         touch "$SWARM_DIR/.fixall_done"
         echo -e "${GREEN}✅ All fixes applied successfully!${NC}"
     else
