@@ -8,11 +8,19 @@
 
 ## 🚀 Quick Start (One Command!)
 
-Open your terminal Create a screen first for background running  and run :
+Open your terminal and run :
 
+Create a Screen (For Vps) For local no need
+```screen -S gensyn```
+
+Run the script
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/Deep-Rewale/Gensyn/main/menu.sh)
 ```
+CTRL A+D For detach
+
+ For Reattach the screen
+```screen -r gensyn```
 
 ---
 
