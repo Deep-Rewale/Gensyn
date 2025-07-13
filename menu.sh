@@ -203,8 +203,9 @@ auto_enter_inputs() {
         HUGGINGFACE_ACCESS_TOKEN=${HF_TOKEN}
     else
         HUGGINGFACE_ACCESS_TOKEN="None"
-        echo -e "${GREEN}>> Would you like to push models you train in the RL swarm to the Hugging Face Hub? [y/N] N${NC}"
-        echo -e "${GREEN}>>> No answer was given, so NO models will be pushed to Hugging Face Hub${NC}"
+        echo -e "${GREEN}> > > Would you like to push models you train in the RL swarm to the Hugging Face Hub? [y/N] N${NC}"
+        echo -e "${GREEN}> > > No answer was given, so NO models will be pushed to Hugging Face Hub${NC}"
+
     fi
 
     # Simulate Enter for MODEL_NAME
