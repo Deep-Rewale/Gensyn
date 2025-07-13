@@ -8,7 +8,7 @@
 
 ## 🚀 Quick Start (One Command!)
 
-Open your terminal and run :
+Open your terminal Create a screen first for background running  and run :
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/deep2882004/Gensyn/main/menu.sh)
