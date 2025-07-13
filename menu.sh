@@ -71,7 +71,8 @@ show_header() {
 }
 
 # Dependencies
-install_deps() {
+
+ install_deps() {
     sudo apt update -y >/dev/null 2>&1
     sudo apt install -y python3 python3-venv python3-pip curl wget screen git lsof ufw jq perl gnupg >/dev/null 2>&1
 
