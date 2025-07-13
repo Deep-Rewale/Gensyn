@@ -431,7 +431,7 @@ main_menu() {
         echo "5. ❌ Exit"
         echo -e "${GREEN}===============================================================================${NC}"
         
-        read -p "${BOLD}${YELLOW}➡️ Select option [1-7]: ${NC}" choice
+        read -p "${BOLD}${YELLOW}➡️ Select option [1-5]: ${NC}" choice
         
         case $choice in
             1) install_node ;;
