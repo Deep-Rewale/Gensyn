@@ -11,7 +11,7 @@
 Open your terminal Create a screen first for background running  and run :
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/deep2882004/Gensyn/main/menu.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Deep-Rewale/Gensyn/main/menu.sh)
 ```
 
 ---
