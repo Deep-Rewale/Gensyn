@@ -558,8 +558,8 @@ main_menu() {
                     echo -e "${YELLOW}⚠️ Operation canceled${NC}"
                 fi
                 ;;
-            6) install_downgraded_node ;;
-            7)
+            5) install_downgraded_node ;;
+            6)
                 echo -e "\n${GREEN}✅ Exiting... Thank you for using deep-rewale guide!${NC}"
                 exit 0
                 ;;
