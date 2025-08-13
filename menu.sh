@@ -69,30 +69,34 @@ show_header() {
     echo -e "${GREEN}===============================================================================${NC}"
 }
 
-# Dependencies
 install_deps() {
-    sudo apt update -y >/dev/null 2>&1
-    sudo apt install -y python3 python3-venv python3-pip curl wget screen git lsof ufw jq perl gnupg >/dev/null 2>&1
+    echo "🔄 Updating package list..."
+    sudo apt update -y
 
-    # Node.js 20
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/dev/null 2>&1
-    sudo apt install -y nodejs >/dev/null 2>&1
+    echo "📦 Installing essential packages..."
+    sudo apt install -y python3 python3-venv python3-pip curl wget screen git lsof ufw jq perl gnupg
 
-    # Yarn (modern key method)
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/yarn.gpg >/dev/null 2>&1
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list >/dev/null 2>&1
-    sudo apt update -y >/dev/null 2>&1
-    sudo apt install -y yarn >/dev/null 2>&1
+    echo "🟢 Installing Node.js 20..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt install -y nodejs
 
-    # Firewall
-    sudo ufw allow 22 >/dev/null 2>&1
-    sudo ufw allow 3000/tcp >/dev/null 2>&1
-    sudo ufw --force enable >/dev/null 2>&1
+    echo "🧵 Installing Yarn..."
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/yarn.gpg
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+    sudo apt update -y
+    sudo apt install -y yarn
 
-    # Cloudflared
-    wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-    sudo dpkg -i cloudflared-linux-amd64.deb >/dev/null 2>&1 || sudo apt install -f -y >/dev/null 2>&1
+    echo "🛡️ Setting up firewall..."
+    sudo ufw allow 22
+    sudo ufw allow 3000/tcp
+    sudo ufw enable
+
+    echo "🌩️ Installing Cloudflared..."
+    wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+    sudo dpkg -i cloudflared-linux-amd64.deb || sudo apt install -f
     rm -f cloudflared-linux-amd64.deb
+
+    echo "✅ All dependencies installed successfully!"
 }
 
 # Swap Management
@@ -113,6 +117,7 @@ disable_swap() {
         sudo sed -i "\|$SWAP_FILE|d" /etc/fstab
     fi
 }
+
 
 # Fixall Script
 run_fixall() {
@@ -153,6 +158,7 @@ fi#' "$run_script"
     fi
 }
 
+
 fix_kill_command() {
     local run_script="$SWARM_DIR/run_rl_swarm.sh"
 
@@ -173,6 +179,13 @@ clone_repo() {
     sudo rm -rf "$SWARM_DIR" 2>/dev/null
     git clone "$REPO_URL" "$SWARM_DIR" >/dev/null 2>&1
     cd "$SWARM_DIR"
+}
+
+clone_downgraded_repo() {
+    sudo rm -rf "$SWARM_DIR" 2>/dev/null
+    git clone "$REPO_URL" "$SWARM_DIR" >/dev/null 2>&1
+    cd "$SWARM_DIR"
+    git checkout 305d3f3227d9ca27f6b4127a5379fc6a40143525 >/dev/null 2>&1
 }
 
 create_default_config() {
@@ -203,9 +216,8 @@ auto_enter_inputs() {
         HUGGINGFACE_ACCESS_TOKEN=${HF_TOKEN}
     else
         HUGGINGFACE_ACCESS_TOKEN="None"
-        echo -e "${GREEN}> > > Would you like to push models you train in the RL swarm to the Hugging Face Hub? [y/N] N${NC}"
-        echo -e "${GREEN}> > > No answer was given, so NO models will be pushed to Hugging Face Hub${NC}"
-
+        echo -e "${GREEN}>> Would you like to push models you train in the RL swarm to the Hugging Face Hub? [y/N] N${NC}"
+        echo -e "${GREEN}>>> No answer was given, so NO models will be pushed to Hugging Face Hub${NC}"
     fi
 
     # Simulate Enter for MODEL_NAME
@@ -213,6 +225,7 @@ auto_enter_inputs() {
     echo -e "${GREEN}>> Enter the name of the model you want to use in huggingface repo/name format, or press [Enter] to use the default model.${NC}"
     echo -e "${GREEN}>> Using default model from config${NC}"
 }
+
 
 install_node() {
     set +m  
@@ -287,8 +300,81 @@ install_node() {
     sleep 1
 }
 
+install_downgraded_node() {
+    set +m  
 
-# Run Node
+    show_header
+    echo -e "${CYAN}${BOLD}INSTALLATION${NC}"
+    echo -e "${YELLOW}===============================================================================${NC}"
+    
+    echo -e "\n${CYAN}Auto-login configuration:${NC}"
+    echo "Preserve login data between sessions? (recommended for auto-login)"
+    read -p "${BOLD}Enable auto-login? [Y/n]: ${NC}" auto_login
+
+    KEEP_TEMP_DATA=$([[ "$auto_login" =~ ^[Nn]$ ]] && echo "false" || echo "true")
+    export KEEP_TEMP_DATA
+
+    # Handle swarm.pem from SWARM_DIR
+    if [ -f "$SWARM_DIR/swarm.pem" ]; then
+        echo -e "\n${YELLOW}⚠️ Existing swarm.pem detected in SWARM_DIR!${NC}"
+        echo "1. Keep and use existing Swarm.pem"
+        echo "2. Delete and generate new Swarm.pem"
+        echo "3. Cancel installation"
+        read -p "${BOLD}➡️ Choose action [1-3]: ${NC}" pem_choice
+
+        case $pem_choice in
+            1)
+                sudo cp "$SWARM_DIR/swarm.pem" "$HOME/swarm.pem"
+                log "INFO" "PEM copied from SWARM_DIR to HOME"
+
+                ;;
+            2)
+                sudo rm -rf "$HOME/swarm.pem"
+                log "INFO" "Old PEM deleted from SWARM_DIR"
+                ;;
+            3)
+                echo -e "${RED}❌ Installation cancelled by user.${NC}"
+                sleep 1
+                return
+                ;;
+            *)
+                echo -e "${RED}❌ Invalid choice. Continuing with existing PEM.${NC}"
+                ;;
+        esac
+    fi
+
+    echo -e "\n${YELLOW}Starting installation...${NC}"
+
+    spinner() {
+        local pid=$1
+        local msg="$2"
+        local spinstr="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+        while kill -0 "$pid" 2>/dev/null; do
+            for (( i=0; i<${#spinstr}; i++ )); do
+                printf "\r$msg ${spinstr:$i:1} "
+                sleep 0.15
+            done
+        done
+        printf "\r$msg ✅ Done"; tput el; echo
+    }
+
+    ( install_deps ) & spinner $! "📦 Installing dependencies"
+    ( clone_downgraded_repo ) & spinner $! "📥 Cloning repo"
+    ( modify_run_script ) & spinner $! "🧠 Modifying run script"
+
+    if [ -f "$HOME/swarm.pem" ]; then
+        sudo cp "$HOME/swarm.pem" "$SWARM_DIR/swarm.pem"
+        sudo chmod 600 "$SWARM_DIR/swarm.pem"
+    fi
+
+    echo -e "\n${GREEN}✅ Installation completed!${NC}"
+    echo -e "Auto-login: ${GREEN}$([ "$KEEP_TEMP_DATA" == "true" ] && echo "ENABLED" || echo "DISABLED")${NC}"
+    echo -e "${YELLOW}${BOLD}👉 Press Enter to return to the menu...${NC}"
+    read
+    sleep 1
+}
+
+
 run_node() {
     show_header
     echo -e "${CYAN}${BOLD}🚀 RUN MODE SELECTION${NC}"
@@ -337,6 +423,7 @@ run_node() {
             manage_swap
             python3 -m venv .venv
             source .venv/bin/activate
+            install_python_packages
             while true; do
                 KEEP_TEMP_DATA="$KEEP_TEMP_DATA" ./run_rl_swarm.sh <<EOF
 $PUSH
@@ -354,6 +441,7 @@ EOF
             manage_swap
             python3 -m venv .venv
             source .venv/bin/activate
+            install_python_packages
             KEEP_TEMP_DATA="$KEEP_TEMP_DATA" ./run_rl_swarm.sh <<EOF
 $PUSH
 $MODEL_NAME
@@ -368,6 +456,7 @@ EOF
             ;;
     esac
 }
+
 
 update_node() {
     set +m  
@@ -420,6 +509,17 @@ update_node() {
     sleep 1
 }
 
+install_python_packages() {
+    TRANSFORMERS_VERSION=$(pip show transformers 2>/dev/null | grep ^Version: | awk '{print $2}')
+    TRL_VERSION=$(pip show trl 2>/dev/null | grep ^Version: | awk '{print $2}')
+
+    if [ "$TRANSFORMERS_VERSION" != "4.51.3" ] || [ "$TRL_VERSION" != "0.19.1" ]; then
+        pip install --force-reinstall transformers==4.51.3 trl==0.19.1
+    fi
+    pip freeze | grep -E '^(transformers|trl)=='
+}
+
+
 # Main Menu
 main_menu() {
     while true; do
@@ -458,8 +558,9 @@ main_menu() {
                     echo -e "${YELLOW}⚠️ Operation canceled${NC}"
                 fi
                 ;;
-            5)
-                echo -e "\n${GREEN}✅ Exiting... Thank you for using deep guide!${NC}"
+            6) install_downgraded_node ;;
+            7)
+                echo -e "\n${GREEN}✅ Exiting... Thank you for using deep-rewale guide!${NC}"
                 exit 0
                 ;;
             *)
