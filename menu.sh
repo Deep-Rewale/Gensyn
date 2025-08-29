@@ -193,6 +193,8 @@ create_default_config() {
     mkdir -p "$SWARM_DIR"
     cat <<EOF > "$CONFIG_FILE"
 PUSH=N
+MODEL_NAME=
+PARTICIPATE_AI_MARKET=Y
 EOF
     chmod 600 "$CONFIG_FILE"
     log "INFO" "Default config created"
@@ -220,10 +222,87 @@ auto_enter_inputs() {
         echo -e "${GREEN}>>> No answer was given, so NO models will be pushed to Hugging Face Hub${NC}"
     fi
 
-    # Simulate Enter for MODEL_NAME
-    MODEL_NAME=""
-    echo -e "${GREEN}>> Enter the name of the model you want to use in huggingface repo/name format, or press [Enter] to use the default model.${NC}"
-    echo -e "${GREEN}>> Using default model from config${NC}"
+    # Handle AI Prediction Market participation
+    if [ -n "$PARTICIPATE_AI_MARKET" ]; then
+        echo -e "${GREEN}>> Would you like your model to participate in the AI Prediction Market? [Y/n] $PARTICIPATE_AI_MARKET${NC}"
+    else
+        PARTICIPATE_AI_MARKET="Y"
+        echo -e "${GREEN}>> Would you like your model to participate in the AI Prediction Market? [Y/n] Y${NC}"
+    fi
+}
+# Change Configuration
+change_config() {
+    show_header
+    echo -e "${CYAN}${BOLD}⚙️ CHANGE CONFIGURATION${NC}"
+    echo -e "${YELLOW}===============================================================================${NC}"
+
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+        echo -e "\n${BOLD}${CYAN}⚙️  CURRENT CONFIGURATION${NC}"
+        echo -e "${YELLOW}-------------------------------------------------${NC}"
+        echo -e "🚀 Push to HF              : ${GREEN}$PUSH${NC}"
+        echo -e "🧠 Model Name              : ${GREEN}${MODEL_NAME:-None}${NC}"
+        echo -e "📈 Participate AI Market   : ${GREEN}$PARTICIPATE_AI_MARKET${NC}"
+        echo -e "${YELLOW}-------------------------------------------------${NC}"
+    else
+        echo -e "${RED}❗ No config found. Creating default...${NC}"
+        create_default_config
+        source "$CONFIG_FILE"
+    fi
+
+    echo -e "\n${CYAN}${BOLD}🧠 Model Selection:${NC}"
+    echo -e "${YELLOW}-------------------------------------------------${NC}"
+    printf "${BOLD}%-3s %-40s${NC}\n" "0." "None (default, assigned by hardware)"
+    printf "${BOLD}%-3s %-40s${NC}\n" "1." "Gensyn/Qwen2.5-0.5B-Instruct"
+    printf "${BOLD}%-3s %-40s${NC}\n" "2." "Qwen/Qwen3-0.6B"
+    printf "${BOLD}%-3s %-40s${NC}\n" "3." "nvidia/AceInstruct-1.5B"
+    printf "${BOLD}%-3s %-40s${NC}\n" "4." "dnotitia/Smoothie-Qwen3-1.7B"
+    printf "${BOLD}%-3s %-40s${NC}\n" "5." "Gensyn/Qwen2.5-1.5B-Instruct"
+    printf "${BOLD}%-3s %-40s${NC}\n" "6." "Custom model"
+    echo -e "${YELLOW}-------------------------------------------------${NC}"
+    read -p "$(echo -e "${BOLD}Choose model [0-6] (Enter = keep current: ${MODEL_NAME:-None}): ${NC}")" model_choice
+
+    if [ -n "$model_choice" ]; then
+        case $model_choice in
+            0) MODEL_NAME="" ;;
+            1) MODEL_NAME="Gensyn/Qwen2.5-0.5B-Instruct" ;;
+            2) MODEL_NAME="Qwen/Qwen3-0.6B" ;;
+            3) MODEL_NAME="nvidia/AceInstruct-1.5B" ;;
+            4) MODEL_NAME="dnotitia/Smoothie-Qwen3-1.7B" ;;
+            5) MODEL_NAME="Gensyn/Qwen2.5-1.5B-Instruct" ;;
+            6) read -p "Enter custom model (repo/name): " MODEL_NAME ;;
+            *) echo -e "${RED}❌ Invalid choice. Keeping current config.${NC}"; MODEL_NAME="${MODEL_NAME:-}" ;;
+        esac
+        sed -i "s|^MODEL_NAME=.*|MODEL_NAME=$MODEL_NAME|" "$CONFIG_FILE"
+        echo -e "${GREEN}✅ Model updated to: ${MODEL_NAME:-None}${NC}"
+    else
+        echo -e "${CYAN}ℹ️ Model selection unchanged.${NC}"
+    fi
+
+    echo -e "\n${CYAN}${BOLD}🚀 Push to Hugging Face:${NC}"
+    read -p "${BOLD}Push models to Hugging Face Hub? [y/N]: ${NC}" push_choice
+    if [ -n "$push_choice" ]; then
+        PUSH=$([[ "$push_choice" =~ ^[Yy]$ ]] && echo "Y" || echo "N")
+        sed -i "s/^PUSH=.*/PUSH=$PUSH/" "$CONFIG_FILE"
+        echo -e "${GREEN}✅ Push to HF updated to: $PUSH${NC}"
+    else
+        echo -e "${CYAN}ℹ️ Push setting unchanged.${NC}"
+    fi
+
+    echo -e "\n${CYAN}${BOLD}📈 Participate in AI Prediction Market:${NC}"
+    read -p "${BOLD}Participate in AI Prediction Market? [Y/n]: ${NC}" market_choice
+    if [ -n "$market_choice" ]; then
+        PARTICIPATE_AI_MARKET=$([[ "$market_choice" =~ ^[Yy]$ ]] && echo "Y" || echo "N")
+        sed -i "s|^PARTICIPATE_AI_MARKET=.*|PARTICIPATE_AI_MARKET=$PARTICIPATE_AI_MARKET|" "$CONFIG_FILE"
+        echo -e "${GREEN}✅ AI Prediction Market participation updated to: $PARTICIPATE_AI_MARKET${NC}"
+    else
+        echo -e "${CYAN}ℹ️ AI Prediction Market setting unchanged.${NC}"
+    fi
+
+    echo -e "\n${GREEN}✅ Configuration updated!${NC}"
+    echo -e "${YELLOW}${BOLD}👉 Press Enter to return to the menu...${NC}"
+    read
+    sleep 1
 }
 
 
@@ -299,6 +378,8 @@ install_node() {
     read
     sleep 1
 }
+
+
 
 install_downgraded_node() {
     set +m  
@@ -398,7 +479,9 @@ run_node() {
         source "$CONFIG_FILE"
         echo -e "\n${BOLD}${CYAN}⚙️  CURRENT CONFIGURATION${NC}"
         echo -e "${YELLOW}-------------------------------------------------${NC}"
-        echo -e "🚀 Push to HF     : ${GREEN}$PUSH${NC}"
+        echo -e "🚀 Push to HF              : ${GREEN}$PUSH${NC}"
+        echo -e "🧠 Model Name              : ${GREEN}${MODEL_NAME:-None}${NC}"
+        echo -e "📈 Participate AI Market   : ${GREEN}$PARTICIPATE_AI_MARKET${NC}"
         echo -e "${YELLOW}-------------------------------------------------${NC}"
     else
         echo -e "${RED}❗ No config found. Creating default...${NC}"
@@ -406,6 +489,38 @@ run_node() {
         source "$CONFIG_FILE"
     fi
     
+    echo -e "${CYAN}${BOLD}🧠 Model Selection:${NC}"
+    echo -e "${YELLOW}-------------------------------------------------${NC}"
+    printf "${BOLD}%-3s %-40s${NC}\n" "0." "None (default, assigned by hardware)"
+    printf "${BOLD}%-3s %-40s${NC}\n" "1." "Gensyn/Qwen2.5-0.5B-Instruct"
+    printf "${BOLD}%-3s %-40s${NC}\n" "2." "Qwen/Qwen3-0.6B"
+    printf "${BOLD}%-3s %-40s${NC}\n" "3." "nvidia/AceInstruct-1.5B"
+    printf "${BOLD}%-3s %-40s${NC}\n" "4." "dnotitia/Smoothie-Qwen3-1.7B"
+    printf "${BOLD}%-3s %-40s${NC}\n" "5." "Gensyn/Qwen2.5-1.5B-Instruct"
+    printf "${BOLD}%-3s %-40s${NC}\n" "6." "Custom model"
+    echo -e "${YELLOW}-------------------------------------------------${NC}"
+    read -p "$(echo -e "${BOLD}Choose model [0-6] (Enter = keep current: ${MODEL_NAME:-None}): ${NC}")" model_choice
+
+    if [ -n "$model_choice" ]; then
+        case $model_choice in
+            0) MODEL_NAME="" ;;
+            1) MODEL_NAME="Gensyn/Qwen2.5-0.5B-Instruct" ;;
+            2) MODEL_NAME="Qwen/Qwen3-0.6B" ;;
+            3) MODEL_NAME="nvidia/AceInstruct-1.5B" ;;
+            4) MODEL_NAME="dnotitia/Smoothie-Qwen3-1.7B" ;;
+            5) MODEL_NAME="Gensyn/Qwen2.5-1.5B-Instruct" ;;
+            6) read -p "Enter custom model (repo/name): " MODEL_NAME ;;
+            *) echo -e "${RED}❌ Invalid choice. Using current config.${NC}"; MODEL_NAME="${MODEL_NAME:-}" ;;
+        esac
+        sed -i "s|^MODEL_NAME=.*|MODEL_NAME=$MODEL_NAME|" "$CONFIG_FILE"
+    fi
+
+    if [ -n "$MODEL_NAME" ]; then
+        echo -e "${GREEN}>> Using selected model: $MODEL_NAME${NC}"
+    else
+        echo -e "${GREEN}>> Using default model assignment.${NC}"
+    fi
+
     auto_enter_inputs
 
     # Ensure KEEP_TEMP_DATA is set
@@ -428,6 +543,7 @@ run_node() {
                 KEEP_TEMP_DATA="$KEEP_TEMP_DATA" ./run_rl_swarm.sh <<EOF
 $PUSH
 $MODEL_NAME
+$PARTICIPATE_AI_MARKET
 EOF
                 log "WARN" "Node crashed, restarting in 5 seconds..."
                 echo -e "${YELLOW}⚠️ Node crashed. Restarting in 5 seconds...${NC}"
@@ -445,6 +561,7 @@ EOF
             KEEP_TEMP_DATA="$KEEP_TEMP_DATA" ./run_rl_swarm.sh <<EOF
 $PUSH
 $MODEL_NAME
+$PARTICIPATE_AI_MARKET
 EOF
             ;;
         3)
