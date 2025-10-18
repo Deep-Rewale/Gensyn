@@ -109,7 +109,6 @@ manage_swap() {
         echo "$SWAP_FILE none swap sw 0 0" | sudo tee -a /etc/fstab >/dev/null 2>&1
     fi
 }
-
 disable_swap() {
     if [ -f "$SWAP_FILE" ]; then
         sudo swapoff "$SWAP_FILE"
@@ -117,7 +116,6 @@ disable_swap() {
         sudo sed -i "\|$SWAP_FILE|d" /etc/fstab
     fi
 }
-
 
 # Fixall Script
 run_fixall() {
